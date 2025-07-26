@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+coeai/__init__.py
+coeai/infer.py
+coeai.egg-info/PKG-INFO
+coeai.egg-info/SOURCES.txt
+coeai.egg-info/dependency_links.txt
+coeai.egg-info/requires.txt
+coeai.egg-info/top_level.txt
