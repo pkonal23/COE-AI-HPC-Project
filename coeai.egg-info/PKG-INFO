@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: coeai
-Version: 2.0.0
+Version: 2.3.1
 Summary: Client to interact with COE AI-hosted LLM models
 Home-page: https://github.com/pkonal/coeai
 Author: Konal Puri
@@ -34,48 +34,60 @@ Dynamic: requires-dist
 Dynamic: requires-python
 Dynamic: summary
 
-# coeai `PyPI Package`
+# `coeai` LLM Inference API Client
 
 **Interact with high-capacity multimodal LLMs hosted on the COE AI GPU cluster from any Python environment.**
 
-`coeai` is a lightweight Python wrapper currently around the *LLaMA-4 16x17B* model (128K context, vision-enabled) deployed on the Centre of Excellence for AI (COE AI) servers at UPES. It exposes a single `/generate` HTTP endpoint, making it trivial to run both text-only and image+text inference from notebooks, scripts or backend services connected to the UPES Wi-Fi.
+`coeai` is a comprehensive Python package designed for seamless LLM inference over LAN to the UPES Wi-Fi, supporting text-to-text and image-to-text operations with advanced streaming features.
 
-> **Text and image input** **128,000-token context** **Streaming or batch** **Runs on the COE AI GPU node**
-
----
+***
 
 ## Table of Contents
-1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Installation](#installation)
-4. [Quick Start](#quick-start)
-5. [API Usage](#api-usage)
-6. [Model Parameters](#model-parameters)
-7. [Authentication](#authentication)
-8. [Joining COE AI](#joining-coe-ai)
-9. [Troubleshooting](#troubleshooting)
-10. [License](#license)
-11. [Author](#author)
 
----
+- [Features](#features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [API Reference](#api-reference)
+    - [LLMinfer Class](#llminfer-class)
+        - [Initialization](#initialization)
+        - [Methods](#methods)
+            - [`generate()`](#generate)
+- [Available Models](#available-models)
+    - [Text-Only Models](#text-only-models)
+    - [Multimodal Models](#multimodal-models)
+- [Usage Examples](#usage-examples)
+    - [Basic Text Generation](#1-basic-text-generation)
+    - [Custom Conversation Messages](#2-custom-conversation-messages)
+    - [Single Image Analysis](#3-single-image-analysis)
+    - [Multiple Image Comparison](#4-multiple-image-comparison)
+    - [Streaming Text Generation](#5-streaming-text-generation)
+    - [Advanced Parameters](#6-advanced-parameters)
+- [cURL Commands Reference](#curl-commands-reference)
+- [Test Files](#test-files)
+- [Error Handling](#error-handling)
+- [Performance Tips](#performance-tips)
+- [Troubleshooting](#troubleshooting)
+- [Authentication: API key](#authentication-api-key)
+- [License](#license)
+- [Changelog](#changelog)
+- [Authors](#authors)
+
+***
 
 ## Features
 
-* **Ultra-long context** up to **128K tokens** per request for long documents or multi-turn chats
-* **Vision support** send images along with text for multimodal reasoning
-* **High performance** queries are served by a dedicated GPU node inside the COE AI HPC cluster
-* **Simple auth** authenticate with a short-lived API key (valid 30 days) sent in the request header
-* **Drop-in wrapper** minimal Python API; no need to handle HTTP manually
+| Feature | Description |
+| :-- | :-- |
+| **Text-to-Text** | Support for all available LLMs |
+| **Image-to-Text** | Multimodal support with Llama4 models |
+| **Streaming** | Real-time response streaming |
+| **Custom Messages** | Advanced conversation handling |
+| **Multiple Images** | Process multiple images per request |
+| **Parameter Control** | Full generation parameter customization |
+| **LAN Optimized** | FastAPI deployment over local UPES network |
 
----
 
-## Requirements
-
-* Python **3.8 or newer**
-* Network access to `http://10.16.1.50:8000` from the UPES campus Wi-Fi
-* A **valid API key** issued by the COE AI team
-
----
+***
 
 ## Installation
 
@@ -83,151 +95,452 @@ Dynamic: summary
 pip install coeai
 ```
 
-This pulls the latest release from PyPI.
 
----
+***
 
 ## Quick Start
-
-The wrapper exposes a single `LLMinfer` class. Initialize it with the API URL and your API key, then call `infer()`.
-
-### Text-to-Text
-
-```python
-from coeai import LLMinfer
-
-llm = LLMinfer(
-    api_url="http://10.16.1.50:8000/generate",
-    api_key="API_KEY"
-)
-
-response = llm.infer(
-    mode="text-to-text",
-    prompt_text="Summarize the key points of general relativity.",
-    max_tokens=500,
-    temperature=0.6,
-    top_p=0.95,
-    stream=False
-)
-
-print(response)
-
-```
-
-### Image + Text
 
 ```python
 from coeai import LLMinfer
 
 # Initialize the client
-llm = LLMinfer(
-    api_url="http://10.16.1.50:8000/generate",
-    api_key="API_KEY"
-)
+llm = LLMinfer(api_key="your-api-key", host="http://10.9.6.165:8001")
 
-# Run inference with image and prompt
-response = llm.infer(
-    mode="image-text-to-text",
-    prompt_text="Describe what's happening in the image.",
-    image_path="/home/konal.106904/sample.jpg",  # <-- update to a valid path
+# Simple text generation
+response = llm.generate(
+    model="llama4-16x17b",
+    prompt="Explain quantum computing in simple terms.",
+    max_tokens=256
+)
+print(response)
+```
+
+
+***
+
+## API Reference
+
+### LLMinfer Class
+
+#### Initialization
+
+```python
+LLMinfer(api_key: str, host: str)
+```
+
+| Parameter | Type | Description |
+| :-- | :-- | :-- |
+| api_key | str | Your API authentication key |
+| host | str | The FastAPI server endpoint URL |
+
+#### Methods
+
+##### `generate()`
+
+```python
+generate(
+    model: str,
+    inference_type: str = "text-to-text",
+    prompt: Optional[str] = None,
+    messages: Optional[List[Dict]] = None,
+    files: Optional[List[str]] = None,
+    max_tokens: int = 512,
+    temperature: float = 0.7,
+    top_p: float = 1.0,
+    stream: bool = False,
+    print_stream: bool = True
+) -> Dict
+```
+
+| Parameter | Type | Description |
+| :-- | :-- | :-- |
+| model | str | Model name (e.g., "llama4-16x17b") |
+| inference_type | str | "text-to-text" or "image-to-text" |
+| prompt | str (optional) | Text prompt for generation |
+| messages | list (optional) | Custom conversation messages |
+| files | list (optional) | List of image file paths |
+| max_tokens | int | Maximum number of tokens to generate |
+| temperature | float | Sampling temperature (0.0–2.0) |
+| top_p | float | Nucleus sampling parameter |
+| stream | bool | Enable streaming response |
+| print_stream | bool | Print streaming output to console |
+| **Returns** | Dict | API response dictionary |
+
+
+***
+
+## Available Models
+
+### Text-Only Models
+- `tinyllama-latest`: Compact model for basic tasks
+- `tinyllama-1.1b`: Small efficient model
+- `deepseek-r1-70b`: Advanced reasoning model
+- `gpt-oss-120b`: Large general-purpose model
+
+### Multimodal Models (Image + Text)
+- `llama4-16x17b`: Recommended for image-to-text inference
+
+***
+
+## Usage Examples
+
+### 1. Basic Text Generation
+
+```python
+from coeai import LLMinfer
+llm = LLMinfer(api_key="your-api-key", host="http://10.9.6.165:8001")
+response = llm.generate(
+    model="tinyllama-latest",
+    inference_type="text-to-text",
+    prompt="Write a short story about a robot learning to paint.",
+    max_tokens=256,
+    temperature=0.7,
+    top_p=1.0
+)
+print(response)
+```
+
+
+### 2. Custom Conversation Messages
+
+```python
+messages = [
+    {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+    {"role": "user", "content": [{"type": "text", "text": "Explain quantum computing in simple terms."}]}
+]
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="text-to-text",
+    messages=messages,
+    max_tokens=512,
+    temperature=0.6
+)
+print(response)
+```
+
+
+### 3. Single Image Analysis
+
+```python
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="image-to-text",
+    files=["/path/to/image.jpeg"],
+    prompt="Describe this image in detail.",
+    max_tokens=512,
+    temperature=0.7
+)
+print(response)
+```
+
+
+### 4. Multiple Image Comparison
+
+```python
+image_paths = [
+    "/Users/coe-ai/Downloads/image1.jpeg",
+    "/Users/coe-ai/Downloads/image2.jpeg"
+]
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="image-to-text",
+    files=image_paths,
+    prompt="Compare these images and describe similarities and differences.",
     max_tokens=512,
     temperature=0.7,
-    top_p=1.0,
+    top_p=1.0
+)
+print(response)
+```
+
+
+### 5. Streaming Text Generation
+
+```python
+response = llm.generate(
+    model="tinyllama-latest",
+    inference_type="text-to-text",
+    prompt="Tell a story about AI and creativity.",
+    max_tokens=300,
+    temperature=0.8,
+    stream=True,
+    print_stream=True
+)
+print("\nFinal response:", response)
+```
+
+
+### 6. Advanced Parameters
+
+```python
+response = llm.generate(
+    model="deepseek-r1-70b",
+    inference_type="text-to-text",
+    prompt="Solve this math problem step by step: What is 2^10 * 3^5?",
+    max_tokens=400,
+    temperature=0.1,
+    top_p=0.9,
     stream=False
 )
-
-# Print the response
 print(response)
-
 ```
 
----
 
-## API Usage
+***
 
-### Using the Python Wrapper
+## cURL Commands Reference
 
-The examples above show the recommended approach using the `LLMinfer` class.
-
-### Direct API Access with cURL
-
-You can also interact directly with the `/generate` endpoint using cURL.
-
-#### Prerequisites
-
-| Requirement | Purpose |
-|-------------|---------|
-| A running instance of the API | Default URL: `http://10.16.1.50:8000/generate` |
-| Valid API key | Supply in the `X-API-Key` request header |
-| cURL 7.68+ | Supports `--data @-` JSON piping |
-
-#### Text-Only Request
+### List Available Models
 
 ```bash
-curl -X POST http://10.16.1.50:8000/generate \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: YOUR_API_KEY_HERE" \
-  -d '{
-    "model": "llama4",
-    "messages": [
-      {
-        "role": "system",
-        "content": "This is a chat between a user and an assistant. The assistant is helping the user with general questions."
-      },
-      {
-        "role": "user",
-        "content": "Explain what a black hole is."
-      }
-    ],
-    "max_tokens": 512,
-    "temperature": 0.7,
-    "top_p": 1.0,
-    "stream": false
-  }'
+curl -X GET http://10.9.6.165:8001/models \\
+  -H "X-API-Key: your-api-key"
 ```
 
-#### Image + Text Request
+### Text-to-Text Inference
 
-For multimodal requests, include the image as a Base64-encoded Data URI in the `content` array:
+```bash
+curl -X POST http://10.9.6.165:8001/generate \\
+  -H "X-API-Key: your-api-key" \\
+  -F "model=tinyllama-latest" \\
+  -F "inference_type=text-to-text" \\
+  -F "prompt=Write a short story about a robot learning to paint." \\
+  -F "max_tokens=256" \\
+  -F "temperature=0.7" \\
+  -F "top_p=1.0"
+```
 
-> **Note:** Replace `YOUR_API_KEY_HERE` with your own API key and `PUT_BASE64_IMAGE_STRING_HERE` with the **Base64-encoded** contents of your image file.
+### Text-to-Text with Custom Messages
 
-**How it Works:**
-1. **Inline Image**: The `image_url` object embeds the entire image as a Data URI so no separate file upload is required
-2. **Multi-Modal Prompt**: The `content` field is an array containing both the image and the accompanying text question, preserving ordering
-3. **Response**: The server returns a JSON object containing the assistant's interpretation of the supplied image
+```bash
+curl -X POST http://10.9.6.165:8001/generate \\
+  -H "X-API-Key: your-api-key" \\
+  -F "model=llama4-16x17b" \\
+  -F "inference_type=text-to-text" \\
+  -F 'messages=[{"role":"user","content":[{"type":"text","text":"Explain quantum computing in simple terms."}]}]' \\
+  -F "max_tokens=512" \\
+  -F "temperature=0.6"
+```
 
----
+### Image-to-Text Inference (Single Image)
 
-## Model Parameters
+```bash
+curl -X POST http://10.9.6.165:8001/generate \\
+  -H "X-API-Key: your-api-key" \\
+  -F "model=llama4-16x17b" \\
+  -F "inference_type=image-to-text" \\
+  -F "prompt=Describe the contents of this image" \\
+  -F "files=@/Users/coe-ai/Downloads/image.jpeg" \\
+  -F "max_tokens=512" \\
+  -F "temperature=0.7"
+```
 
-### Default Parameters
+### Image-to-Text Inference (Multiple Images)
 
-| Field          | Description                                  | Default |
-|----------------|----------------------------------------------|---------|
-| `model`        | Model name (currently fixed to `llama4`)     | `llama4`      |
-| `stream`       | Return tokens incrementally                  | `false` |
-| `max_tokens`   | Maximum new tokens to generate               | `1024`  |
-| `temperature`  | Sampling temperature (creativity)            | `0.7`   |
-| `top_p`        | Nucleus sampling                             | `1.0`   |
-| `stop`         | List of stop sequences                       | `null`  |
+```bash
+curl -X POST http://10.9.6.165:8001/generate \\
+  -H "X-API-Key: your-api-key" \\
+  -F "model=llama4-16x17b" \\
+  -F "inference_type=image-to-text" \\
+  -F "prompt=Compare these two images and describe similarities and differences" \\
+  -F "files=@/Users/coe-ai/Downloads/image1.jpeg" \\
+  -F "files=@/Users/coe-ai/Downloads/image2.jpeg" \\
+  -F "max_tokens=512" \\
+  -F "temperature=0.7"
+```
 
-### Parameter Details
+### Streaming Response
 
-| Parameter      | Description |
-|----------------|-------------|
-| `model`        | The model identifier exposed by your server (here `llama4`) |
-| `messages`     | Conversation history, each entry containing a `role` and `content` |
-| `max_tokens`   | Upper bound on tokens in the assistant reply |
-| `temperature`  | Controls randomness; lower values yield more deterministic output |
-| `top_p`        | Nucleus sampling; keep at `1.0` for default behavior |
-| `stream`       | When `true`, the API will send incremental responses via Server-Sent Events (SSE) |
+```bash
+curl -N -X POST http://10.9.6.165:8001/generate \\
+  -H "X-API-Key: your-api-key" \\
+  -F "model=tinyllama-latest" \\
+  -F "inference_type=text-to-text" \\
+  -F "prompt=Write a motivational quote about persistence." \\
+  -F "stream=true"
+```
 
-> **Note:** The server enforces total context of 128K tokens (prompt + generated). Adjust `max_tokens` accordingly.
+Note: The `-N` flag ensures curl doesn't buffer the streaming response.
 
----
+## Test Files
 
-## Authentication
+Create these test files to validate all functionality:
+
+### test_text_prompt.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key, host="http://10.9.6.165:8001")
+
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="text-to-text",
+    prompt="Explain the difference between supervised and unsupervised learning.",
+    max_tokens=256,
+    temperature=0.5,
+    top_p=0.9,
+    stream=False
+)
+print(response)
+```
+
+### test_custom_messages.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key)
+
+messages = [
+    {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
+    {"role": "user", "content": [{"type": "text", "text": "Give a short summary of COVID-19 impact."}]}
+]
+
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="text-to-text",
+    messages=messages,
+    max_tokens=300,
+    temperature=0.6,
+    top_p=0.95
+)
+print(response)
+```
+
+### test_streaming_text.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key)
+
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="text-to-text",
+    prompt="Write a 5-line poem about AI.",
+    max_tokens=150,
+    temperature=0.8,
+    top_p=0.9,
+    stream=True,
+    print_stream=True  # Prints partial outputs
+)
+print("\\nCollected response:", response)
+```
+
+### test_image_to_text.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key)
+
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="image-to-text",
+    files=["/Users/coe-ai/Downloads/image.jpeg"],
+    prompt="Describe this image in detail",
+    max_tokens=512
+)
+print(response)
+```
+
+### test_multiple_images.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key)
+
+image_paths = [
+    "/Users/coe-ai/Downloads/image1.jpeg",
+    "/Users/coe-ai/Downloads/image2.jpeg"
+]
+
+response = llm.generate(
+    model="llama4-16x17b",
+    inference_type="image-to-text",
+    files=image_paths,
+    prompt="Compare the images and describe similarities and differences",
+    max_tokens=512,
+    temperature=0.7,
+    top_p=1.0
+)
+print(response)
+```
+
+### test_all_parameters.py
+```python
+from coeai import LLMinfer
+
+api_key = "your-api-key"
+llm = LLMinfer(api_key)
+
+# Test with all available parameters
+response = llm.generate(
+    model="deepseek-r1-70b",
+    inference_type="text-to-text",
+    prompt="Write a technical explanation of blockchain technology.",
+    max_tokens=400,
+    temperature=0.3,  # Low temperature for technical accuracy
+    top_p=0.85,
+    stream=False
+)
+print(response)
+```
+
+## Error Handling
+
+The client provides detailed error handling:
+
+```python
+try:
+    response = llm.generate(
+        model="llama4-16x17b",
+        inference_type="image-to-text",
+        files=["nonexistent.jpg"],
+        prompt="Describe this image"
+    )
+except requests.exceptions.HTTPError as e:
+    print(f"HTTP Error: {e.response.json()}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+```
+
+
+
+## Performance Tips
+
+1. **Model Selection**: Use `llama4-16x17b` for image-to-text to avoid memory issues
+2. **Temperature Settings**: Lower values (0.1-0.3) for factual/technical content, higher (0.7-1.0) for creative tasks
+3. **Token Limits**: Set appropriate `max_tokens` to balance response quality and generation time
+4. **Streaming**: Use streaming for long responses to see progress in real-time
+
+
+***
+## Troubleshooting
+
+### Common Issues
+
+1. **`400` Bad Request**: Check model name and inference type compatibility
+2. **`401` Unauthorized**: Verify API key is correct
+3. **`500` Internal Server Error**: Usually indicates insufficient GPU memory for large models
+4. **`Connection Refused`**: Ensure from COE AI that the FastAPI server is running and accessible
+
+### Debug Mode
+
+Enable detailed error reporting:
+
+```python
+try:
+    response = llm.generate(...)
+except requests.exceptions.HTTPError as e:
+    print("Detailed error:", e.response.json())
+```
+
+
+
+## Authentication: API key
 
 All requests must include an **API key** issued by the COE AI team. Pass the key when constructing `LLMinfer` (it is added as an `Authorization` header behind the scenes).
 
@@ -265,36 +578,28 @@ Best regards,
 
 2. Allow **2-3 business days** for processing. The team will reply with your API key.
 
-### Key Renewal
-
-Keys expire **after 30 days**. Email the same address with the subject:
-```
-Subject: API Key Renewal Request for COE AI LLM Access
-```
-
-Include your previous key and a brief usage summary.
-
----
-
-## Troubleshooting
-
-| Symptom | Possible Cause | Fix |
-|---------|----------------|-----|
-| `ConnectionError` | Not on UPES network | Connect to campus Wi-Fi or VPN |
-| `401 Unauthorized` | Missing/expired API key | Request or renew your key |
-| Long latency | Very large prompts or high `max_tokens` | Reduce prompt size or output length |
-
----
 
 ## License
 
 `coeai` is released under the **MIT License**.
 
 ---
+## Changelog
 
-## Author
+### v2.1.1
+- Production Release
+- Text-to-text and image-to-text inference
+- Streaming support
+- Multiple image processing
+- Comprehensive parameter control
+- Full cURL command compatibility
+---
 
-**Konal Puri**  
-Centre of Excellence: AI (COE AI), HPC Project, UPES
+## Authors
 
-PyPI: <https://pypi.org/project/coeai>
+**Konal Puri**<br>
+**Sawai Pratap Khatri**<br>
+Centre of Excellence: AI (COE AI), HPC Project, UPES.
+
+PyPI: <https://pypi.org/project/coeai><br>
+GitHub: <https://github.com/pkonal23/COE-AI-HPC-Project.git>

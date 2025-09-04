@@ -10,8 +10,8 @@ import sys
 import warnings
 import zipfile
 
-from collections.abc import Iterator
-from typing import Any, Mapping, Sequence, TypeVar
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any, TypeVar
 
 import pyproject_hooks
 
@@ -311,7 +311,7 @@ class ProjectBuilder:
         if not match:
             msg = 'Invalid wheel'
             raise ValueError(msg)
-        distinfo = f"{match['distribution']}-{match['version']}.dist-info"
+        distinfo = f'{match["distribution"]}-{match["version"]}.dist-info'
         member_prefix = f'{distinfo}/'
         with zipfile.ZipFile(wheel) as w:
             w.extractall(
