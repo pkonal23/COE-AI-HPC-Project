@@ -1,0 +1,8 @@
+# Ignore local environment folder
+coeai-env/
+
+# Ignore Python package metadata
+coeai.egg-info/
+
+# Ignore distribution build artifacts
+dist/
