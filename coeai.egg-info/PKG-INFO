@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: coeai
-Version: 2.3.1
+Version: 2.3.0
 Summary: Client to interact with COE AI-hosted LLM models
 Home-page: https://github.com/pkonal/coeai
 Author: Konal Puri
@@ -48,23 +48,22 @@ Dynamic: summary
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [API Reference](#api-reference)
-    - [LLMinfer Class](#llminfer-class)
-        - [Initialization](#initialization)
-        - [Methods](#methods)
-            - [`generate()`](#generate)
+  - [LLMinfer Class](#llminfer-class)
+    - [Initialization](#initialization)
+    - [Methods](#methods)
+      - [generate()](#generate)
 - [Available Models](#available-models)
-    - [Text-Only Models](#text-only-models)
-    - [Multimodal Models](#multimodal-models)
+  - [Text-Only Models](#text-only-models)
+  - [Multimodal Models](#multimodal-models)
 - [Usage Examples](#usage-examples)
-    - [Basic Text Generation](#1-basic-text-generation)
-    - [Custom Conversation Messages](#2-custom-conversation-messages)
-    - [Single Image Analysis](#3-single-image-analysis)
-    - [Multiple Image Comparison](#4-multiple-image-comparison)
-    - [Streaming Text Generation](#5-streaming-text-generation)
-    - [Advanced Parameters](#6-advanced-parameters)
-- [cURL Commands Reference](#curl-commands-reference)
-- [Test Files](#test-files)
+  - [1. Basic Text Generation](#1-basic-text-generation)
+  - [2. Custom Conversation Messages](#2-custom-conversation-messages)
+  - [3. Single Image Analysis](#3-single-image-analysis)
+  - [4. Multiple Image Comparison](#4-multiple-image-comparison)
+  - [5. Streaming Text Generation](#5-streaming-text-generation)
+  - [6. Advanced Parameters](#6-advanced-parameters)
 - [Error Handling](#error-handling)
+- [cURL Commands Reference](#curl-commands-reference)
 - [Performance Tips](#performance-tips)
 - [Troubleshooting](#troubleshooting)
 - [Authentication: API key](#authentication-api-key)
@@ -108,7 +107,7 @@ llm = LLMinfer(api_key="your-api-key", host="http://10.9.6.165:8001")
 
 # Simple text generation
 response = llm.generate(
-    model="llama4-16x17b",
+    model="llama4:16x17b",
     prompt="Explain quantum computing in simple terms.",
     max_tokens=256
 )
@@ -172,13 +171,13 @@ generate(
 ## Available Models
 
 ### Text-Only Models
-- `tinyllama-latest`: Compact model for basic tasks
-- `tinyllama-1.1b`: Small efficient model
-- `deepseek-r1-70b`: Advanced reasoning model
-- `gpt-oss-120b`: Large general-purpose model
+- `tinyllama:latest`: Compact model for basic tasks
+- `tinyllama:1.1b`: Small efficient model
+- `deepseek-r1:70b`: Advanced reasoning model
+- `gpt-oss:120b`: Large general-purpose model
 
 ### Multimodal Models (Image + Text)
-- `llama4-16x17b`: Recommended for image-to-text inference
+- `llama4:16x17b`: Recommended for image-to-text inference
 
 ***
 
@@ -190,7 +189,7 @@ generate(
 from coeai import LLMinfer
 llm = LLMinfer(api_key="your-api-key", host="http://10.9.6.165:8001")
 response = llm.generate(
-    model="tinyllama-latest",
+    model="tinyllama:latest",
     inference_type="text-to-text",
     prompt="Write a short story about a robot learning to paint.",
     max_tokens=256,
@@ -209,7 +208,7 @@ messages = [
     {"role": "user", "content": [{"type": "text", "text": "Explain quantum computing in simple terms."}]}
 ]
 response = llm.generate(
-    model="llama4-16x17b",
+    model="llama4:16x17b",
     inference_type="text-to-text",
     messages=messages,
     max_tokens=512,
@@ -223,7 +222,7 @@ print(response)
 
 ```python
 response = llm.generate(
-    model="llama4-16x17b",
+    model="llama4:16x17b",
     inference_type="image-to-text",
     files=["/path/to/image.jpeg"],
     prompt="Describe this image in detail.",
@@ -242,7 +241,7 @@ image_paths = [
     "/Users/coe-ai/Downloads/image2.jpeg"
 ]
 response = llm.generate(
-    model="llama4-16x17b",
+    model="llama4:16x17b",
     inference_type="image-to-text",
     files=image_paths,
     prompt="Compare these images and describe similarities and differences.",
@@ -258,7 +257,7 @@ print(response)
 
 ```python
 response = llm.generate(
-    model="tinyllama-latest",
+    model="tinyllama:latest",
     inference_type="text-to-text",
     prompt="Tell a story about AI and creativity.",
     max_tokens=300,
@@ -274,7 +273,7 @@ print("\nFinal response:", response)
 
 ```python
 response = llm.generate(
-    model="deepseek-r1-70b",
+    model="deepseek-r1:70b",
     inference_type="text-to-text",
     prompt="Solve this math problem step by step: What is 2^10 * 3^5?",
     max_tokens=400,
@@ -285,6 +284,24 @@ response = llm.generate(
 print(response)
 ```
 
+## Error Handling
+
+The client provides detailed error handling:
+
+```python
+try:
+    response = llm.generate(
+        model="llama4:16x17b",
+        inference_type="image-to-text",
+        files=["nonexistent.jpg"],
+        prompt="Describe this image"
+    )
+except requests.exceptions.HTTPError as e:
+    print(f"HTTP Error: {e.response.json()}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+```
+
 
 ***
 
@@ -293,8 +310,8 @@ print(response)
 ### List Available Models
 
 ```bash
-curl -X GET http://10.9.6.165:8001/models \\
-  -H "X-API-Key: your-api-key"
+curl -X GET http://10.9.6.165:8001/models \\ -H "X-API-Key: your-api-key"
+
 ```
 
 ### Text-to-Text Inference
@@ -302,7 +319,7 @@ curl -X GET http://10.9.6.165:8001/models \\
 ```bash
 curl -X POST http://10.9.6.165:8001/generate \\
   -H "X-API-Key: your-api-key" \\
-  -F "model=tinyllama-latest" \\
+  -F "model=tinyllama:latest" \\
   -F "inference_type=text-to-text" \\
   -F "prompt=Write a short story about a robot learning to paint." \\
   -F "max_tokens=256" \\
@@ -315,7 +332,7 @@ curl -X POST http://10.9.6.165:8001/generate \\
 ```bash
 curl -X POST http://10.9.6.165:8001/generate \\
   -H "X-API-Key: your-api-key" \\
-  -F "model=llama4-16x17b" \\
+  -F "model=llama4:16x17b" \\
   -F "inference_type=text-to-text" \\
   -F 'messages=[{"role":"user","content":[{"type":"text","text":"Explain quantum computing in simple terms."}]}]' \\
   -F "max_tokens=512" \\
@@ -327,7 +344,7 @@ curl -X POST http://10.9.6.165:8001/generate \\
 ```bash
 curl -X POST http://10.9.6.165:8001/generate \\
   -H "X-API-Key: your-api-key" \\
-  -F "model=llama4-16x17b" \\
+  -F "model=llama4:16x17b" \\
   -F "inference_type=image-to-text" \\
   -F "prompt=Describe the contents of this image" \\
   -F "files=@/Users/coe-ai/Downloads/image.jpeg" \\
@@ -340,7 +357,7 @@ curl -X POST http://10.9.6.165:8001/generate \\
 ```bash
 curl -X POST http://10.9.6.165:8001/generate \\
   -H "X-API-Key: your-api-key" \\
-  -F "model=llama4-16x17b" \\
+  -F "model=llama4:16x17b" \\
   -F "inference_type=image-to-text" \\
   -F "prompt=Compare these two images and describe similarities and differences" \\
   -F "files=@/Users/coe-ai/Downloads/image1.jpeg" \\
@@ -354,7 +371,7 @@ curl -X POST http://10.9.6.165:8001/generate \\
 ```bash
 curl -N -X POST http://10.9.6.165:8001/generate \\
   -H "X-API-Key: your-api-key" \\
-  -F "model=tinyllama-latest" \\
+  -F "model=tinyllama:latest" \\
   -F "inference_type=text-to-text" \\
   -F "prompt=Write a motivational quote about persistence." \\
   -F "stream=true"
@@ -362,156 +379,12 @@ curl -N -X POST http://10.9.6.165:8001/generate \\
 
 Note: The `-N` flag ensures curl doesn't buffer the streaming response.
 
-## Test Files
-
-Create these test files to validate all functionality:
-
-### test_text_prompt.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key, host="http://10.9.6.165:8001")
-
-response = llm.generate(
-    model="llama4-16x17b",
-    inference_type="text-to-text",
-    prompt="Explain the difference between supervised and unsupervised learning.",
-    max_tokens=256,
-    temperature=0.5,
-    top_p=0.9,
-    stream=False
-)
-print(response)
-```
-
-### test_custom_messages.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key)
-
-messages = [
-    {"role": "system", "content": [{"type": "text", "text": "You are a helpful assistant."}]},
-    {"role": "user", "content": [{"type": "text", "text": "Give a short summary of COVID-19 impact."}]}
-]
-
-response = llm.generate(
-    model="llama4-16x17b",
-    inference_type="text-to-text",
-    messages=messages,
-    max_tokens=300,
-    temperature=0.6,
-    top_p=0.95
-)
-print(response)
-```
-
-### test_streaming_text.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key)
-
-response = llm.generate(
-    model="llama4-16x17b",
-    inference_type="text-to-text",
-    prompt="Write a 5-line poem about AI.",
-    max_tokens=150,
-    temperature=0.8,
-    top_p=0.9,
-    stream=True,
-    print_stream=True  # Prints partial outputs
-)
-print("\\nCollected response:", response)
-```
-
-### test_image_to_text.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key)
-
-response = llm.generate(
-    model="llama4-16x17b",
-    inference_type="image-to-text",
-    files=["/Users/coe-ai/Downloads/image.jpeg"],
-    prompt="Describe this image in detail",
-    max_tokens=512
-)
-print(response)
-```
-
-### test_multiple_images.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key)
-
-image_paths = [
-    "/Users/coe-ai/Downloads/image1.jpeg",
-    "/Users/coe-ai/Downloads/image2.jpeg"
-]
-
-response = llm.generate(
-    model="llama4-16x17b",
-    inference_type="image-to-text",
-    files=image_paths,
-    prompt="Compare the images and describe similarities and differences",
-    max_tokens=512,
-    temperature=0.7,
-    top_p=1.0
-)
-print(response)
-```
-
-### test_all_parameters.py
-```python
-from coeai import LLMinfer
-
-api_key = "your-api-key"
-llm = LLMinfer(api_key)
-
-# Test with all available parameters
-response = llm.generate(
-    model="deepseek-r1-70b",
-    inference_type="text-to-text",
-    prompt="Write a technical explanation of blockchain technology.",
-    max_tokens=400,
-    temperature=0.3,  # Low temperature for technical accuracy
-    top_p=0.85,
-    stream=False
-)
-print(response)
-```
-
-## Error Handling
-
-The client provides detailed error handling:
-
-```python
-try:
-    response = llm.generate(
-        model="llama4-16x17b",
-        inference_type="image-to-text",
-        files=["nonexistent.jpg"],
-        prompt="Describe this image"
-    )
-except requests.exceptions.HTTPError as e:
-    print(f"HTTP Error: {e.response.json()}")
-except Exception as e:
-    print(f"Error: {str(e)}")
-```
 
 
 
 ## Performance Tips
 
-1. **Model Selection**: Use `llama4-16x17b` for image-to-text to avoid memory issues
+1. **Model Selection**: Use `llama4:16x17b` for image-to-text to avoid memory issues
 2. **Temperature Settings**: Lower values (0.1-0.3) for factual/technical content, higher (0.7-1.0) for creative tasks
 3. **Token Limits**: Set appropriate `max_tokens` to balance response quality and generation time
 4. **Streaming**: Use streaming for long responses to see progress in real-time
@@ -586,7 +459,7 @@ Best regards,
 ---
 ## Changelog
 
-### v2.1.1
+### v2.3.0
 - Production Release
 - Text-to-text and image-to-text inference
 - Streaming support

@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="coeai",
-    version="2.3.1",  # Bump version before re-upload
+    version="2.3.0",  # Bump version before re-upload
     author="Konal Puri",
     author_email="purikonal23@gmail.com",
     description="Client to interact with COE AI-hosted LLM models",

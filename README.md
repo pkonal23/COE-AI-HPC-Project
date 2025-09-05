@@ -423,7 +423,7 @@ Best regards,
 ---
 ## Changelog
 
-### v2.3.1
+### v2.3.0
 - Production Release
 - Text-to-text and image-to-text inference
 - Streaming support
