@@ -90,6 +90,7 @@ class LLMinfer:
         max_tokens: int = 512,
         temperature: float = 0.7,
         top_p: float = 1.0,
+        context_window: int = 2048,
         stream: bool = False,
         print_stream: bool = True
     ) -> Dict:
@@ -105,6 +106,7 @@ class LLMinfer:
             max_tokens: Maximum number of tokens to generate (default: 512)
             temperature: Sampling temperature 0.0-2.0 (default: 0.7)
             top_p: Nucleus sampling parameter 0.0-1.0 (default: 1.0)
+            context_window: Context window size (num_ctx) (default: 2048)
             stream: Enable streaming response (default: False)
             print_stream: Print streaming output to console (default: True)
 
@@ -187,6 +189,7 @@ class LLMinfer:
                 "max_tokens": str(max_tokens),
                 "temperature": str(temperature),
                 "top_p": str(top_p),
+                "context_window": str(context_window),
                 "stream": str(stream).lower(),
                 "prompt": prompt or "",
                 "messages": json.dumps(payload_messages)

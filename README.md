@@ -154,6 +154,7 @@ response = llm.generate(
     model="deepseek-r1:70b",
     prompt="Solve:  What is 15! (factorial)?",
     max_tokens=400,
+    context_window=4096, # Increase context for complex tasks
     temperature=0.1,   # Lower = more deterministic
     top_p=0.9          # Nucleus sampling
 )
@@ -190,6 +191,7 @@ generate(
     max_tokens: int = 512,
     temperature: float = 0.7,
     top_p: float = 1.0,
+    context_window: int = 2048,
     stream: bool = False,
     print_stream: bool = True
 ) -> Dict
@@ -205,6 +207,7 @@ generate(
 | `max_tokens` | int | Maximum tokens to generate |
 | `temperature` | float | Sampling temperature (0.0–2.0) |
 | `top_p` | float | Nucleus sampling (0.0–1.0) |
+| `context_window` | int | Context size (num_ctx), default 2048 |
 | `stream` | bool | Enable streaming response |
 | `print_stream` | bool | Print stream to console |
 

@@ -5,6 +5,12 @@ All notable changes to the `coeai` package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-02-07
+
+### Added
+- **New Parameter**: `context_window` (defaults to 2048) in `generate()` method.
+- Pass `num_ctx` to Ollama backend to support larger context windows (e.g., for `deepseek-r1:70b`).
+
 ## [4.0.0] - 2026-02-07
 
 ### Breaking Changes

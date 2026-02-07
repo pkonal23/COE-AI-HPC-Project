@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="coeai",
-    version="4.0.0",  # Major version bump for breaking changes
+    version="4.1.0",  # Minor version bump for new feature
     author="Konal Puri, Sawai Pratap Khatri",
     author_email="purikonal23@gmail.com",
     description="Professional Python client for COE AI LLM inference API with text and vision support",
